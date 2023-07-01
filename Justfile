@@ -7,10 +7,10 @@ just := env_var_or_default("JUST", just_executable())
 
 root_dir := invocation_directory()
 
-version := `{{cargo}} get version | head --bytes=-1`
-sha := `{{git}} rev-parse --short HEAD`
+version := `cargo get version | head --bytes=-1`
+sha := `git rev-parse --short HEAD`
 
-default:
+_default:
   {{just}} --list
 
 #############
@@ -72,8 +72,6 @@ check:
     @{{cargo}} check
 
 # Ensure that the # of commits is what we expect
-# NOTE: we can't write a simpler script here because some CI environments don't have bash in the same place
-# and/or are using busybox env (which doesn't support -S)
 check-commit-count now before count:
     @export COUNT=$(($(git rev-list --count {{now}} --no-merges) - $(git rev-list --count {{before}}))) && \
     if [ "$COUNT" != "1" ]; then \
@@ -91,6 +89,7 @@ changelog_file_path := env_var_or_default("CHANGELOG_FILE_PATH", "CHANGELOG")
 changelog:
   {{git}} cliff --unreleased --tag={{version}} --prepend={{changelog_file_path}}
 
+# Release a major version
 release-major:
     {{git}} fetch --tags
     {{cargo}} set-version --bump major
@@ -98,6 +97,7 @@ release-major:
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
 
+# Release a minor version
 release-minor:
     {{git}} fetch --tags
     {{cargo}} set-version --bump minor
@@ -105,6 +105,7 @@ release-minor:
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
 
+# Release a patch version
 release-patch:
     {{git}} fetch --tags
     {{cargo}} set-version --bump patch
