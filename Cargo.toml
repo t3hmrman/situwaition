@@ -1,0 +1,14 @@
+[package]
+name = "situwaition"
+version = "0.0.1"
+edition = "2021"
+rust_version = "1.70"
+authors = [
+  "vados <vados@vadosware.io>"
+]
+categories = [
+  "async",
+  "utilities",
+]
+
+[dependencies]
