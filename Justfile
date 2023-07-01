@@ -79,6 +79,21 @@ check-commit-count now before count:
       exit 1; \
     fi
 
+########
+# Test #
+########
+
+test: test-unit test-int test-e2e
+
+test-unit:
+    @{{cargo}} test
+
+test-int:
+    @{{cargo}} test
+
+test-e2e:
+    @{{cargo}} test
+
 ######################
 # Release Management #
 ######################

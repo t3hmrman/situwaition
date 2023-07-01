@@ -11,12 +11,21 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+      # Setup
+      - uses: actions/checkout@v3
+      - uses: extractions/setup-just@v1
+
+      # Build
+      - name: Build
+        run: cargo build --verbose
+
+      # Test
+      - name: Run unit tests
+        run: just test-unit
+      - name: Run integration tests
+        run: just test-int
+      - name: Run E2E tests
+        run: just test-e2e
