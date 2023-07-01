@@ -21,14 +21,17 @@
 ///!     });
 ///! }
 ///! ```
-use std::{
-    error::Error,
-    result::Result,
-    thread::sleep,
-    time::{Duration, Instant},
-};
+use std::{result::Result, time::Duration};
 
 use thiserror::Error;
+
+mod async_std;
+mod mio;
+mod sync;
+mod tokio;
+
+const DEFAULT_SITUWAITION_TIMEOUT_MS: u64 = 3_000;
+const DEFAULT_SITUWAITION_CHECK_INTERVAL_MS: u64 = 250;
 
 /// The type of error that is thrown when
 #[derive(Debug, Error)]
@@ -44,14 +47,23 @@ pub enum SituwaitionError<E> {
 
 /// Options for a given situwaition
 #[allow(dead_code)]
+#[derive(Debug)]
 struct SituwaitionOpts {
     pub timeout: Duration,
     pub check_interval: Duration,
 }
 
-/// This trait represents a "situwaition" that can be a"waited".
-/// note that how the waiting is done can differ by platform
-trait Situwaition {
+impl Default for SituwaitionOpts {
+    fn default() -> Self {
+        return SituwaitionOpts {
+            timeout: Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS),
+            check_interval: Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS),
+        };
+    }
+}
+
+/// The basic requirements of any situwaition
+trait SituwaitionBase {
     type Result;
     type Error;
 
@@ -63,42 +75,50 @@ trait Situwaition {
         &mut self,
         update_fn: dyn Fn(SituwaitionOpts) -> SituwaitionOpts,
     ) -> Result<SituwaitionOpts, SituwaitionError<()>>;
+}
 
+/// Synchronously executed situwaitions
+#[cfg(not(any(feature = "tokio", feature = "async-std", feature = "mio")))]
+trait SyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
     fn exec(&self) -> Result<Self::Result, Self::Error>;
 }
 
-/// Wait for a situwaition
-#[allow(dead_code)]
-fn wait_for<R, E>(
-    wait_fn: impl Situwaition<Result = R, Error = E>,
-) -> Result<R, SituwaitionError<E>>
-where
-    E: Error,
-{
-    let SituwaitionOpts {
-        timeout,
-        check_interval,
-    } = wait_fn.options();
-    let start = Instant::now();
-
-    // Run the situwaition until it succeeds
-    loop {
-        match wait_fn.exec() {
-            Ok(v) => break Ok(v),
-            Err(e) => {
-                let now = Instant::now();
-                if now - start > timeout {
-                    break Err(SituwaitionError::TimeoutError(e));
-                }
-            }
-        }
-
-        // busy wait for the check interval
-        sleep(check_interval);
-    }
+/// This trait represents a "situwaition" that can be a"waited".
+/// note that how the waiting is done can differ by platform
+#[cfg(any(feature = "tokio", feature = "async-std", feature = "mio"))]
+trait AsyncSituwaition: SituwaitionBase {
+    /// Execute the situwaition, and wait until it resolves
+    /// or fails with a timeout
+    #[cfg(not(feature = "tokio"))]
+    async fn exec(&self) -> Result<Self::Result, Self::Error>;
 }
+
+// TODO: should wait for be on the situwaition?
+// i.e. Situwaition::new().wait_for()?
+//
+
+// TODO: should wait_for be a function at the top level, which takes in anything that is situwaition compatible?
+// wait for be on the situwaition? or
+//
+// i.e. wait_for(|| value = true)
+
+// It's possible that Situation-as-object is superior...
+//
+// (!) MAYBE do both? taking the impl is the most permissive way to allow it to work
+// AND we can provide special interfaces for specific things.
+//
+// Does situation-as-object enable sync/async use easier? fn -> Result<Future<...>, Error> ??
+// Do the simple thing and just spawn tasks to do the work synchronously but far away?
+// (!) NO, if async is enabled, then exec should be an async function!
+
+// Now can the run function be hidden?
+
+// Q: Should people be able to manipulate the waiting stuff *at all*?
+// maybe they should just *get back* something that adheres to the interface?
+//
+// kind of like a 'zero trust' interface -- fn (in: impl A) -> impl B
 
 // #[cfg(test)]
 // mod tests {
