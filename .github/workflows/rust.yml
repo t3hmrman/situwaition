@@ -16,16 +16,23 @@ jobs:
     steps:
       # Setup
       - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "shared"
       - uses: extractions/setup-just@v1
+      - run: cargo install cargo-get
+      - name: Install cargo-nextest
+        uses: baptiste0928/cargo-install@v1
+        with:
+          crate: cargo-nextest
+          locked: true
 
       # Build
       - name: Build
         run: cargo build --verbose
 
-      # Test
+      # Run tests
       - name: Run unit tests
         run: just test-unit
       - name: Run integration tests
         run: just test-int
-      - name: Run E2E tests
-        run: just test-e2e

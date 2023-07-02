@@ -76,7 +76,6 @@ trait SituwaitionBase {
 }
 
 /// Synchronously executed situwaitions
-#[cfg(not(any(feature = "tokio", feature = "async-std", feature = "mio")))]
 trait SyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
@@ -92,15 +91,6 @@ trait AsyncSituwaition: SituwaitionBase {
     #[cfg(not(feature = "tokio"))]
     async fn exec(&self) -> Result<Self::Result, Self::Error>;
 }
-
-// TODO: should wait for be on the situwaition?
-// i.e. Situwaition::new().wait_for()?
-//
-
-// TODO: should wait_for be a function at the top level, which takes in anything that is situwaition compatible?
-// wait for be on the situwaition? or
-//
-// i.e. wait_for(|| value = true)
 
 // It's possible that Situation-as-object is superior...
 //

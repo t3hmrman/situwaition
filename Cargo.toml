@@ -6,10 +6,10 @@ rust_version = "1.70"
 authors = [
   "vados <vados@vadosware.io>"
 ]
-categories = [
-  "async",
-  "utilities",
-]
+categories = [ "async", "utilities" ]
+
+[lib]
+crate-type = [ "cdylib" ]
 
 [features]
 default = []

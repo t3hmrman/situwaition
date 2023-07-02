@@ -85,21 +85,18 @@ check-commit-count now before count:
 
 test_focus := env_var_or_default("TEST", "")
 
-test: test-unit test-int test-e2e
+test: test-unit test-int
 
 # Run unit tests
 test-unit:
-    @{{cargo}} nextest run
+    @{{cargo}} nextest run -E 'kind(lib)'
 
 # Run unit tests continuously
 test-unit-watch:
-    @{{cargo}} watch -- cargo nextest run {{test_focus}}
+    @{{cargo}} watch -- {{cargo}} nextest run {{test_focus}}
 
 test-int:
-    @{{cargo}} test
-
-test-e2e:
-    @{{cargo}} test
+    @{{cargo}} nextest run -E 'kind(test)'
 
 ######################
 # Release Management #
