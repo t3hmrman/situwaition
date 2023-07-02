@@ -25,10 +25,8 @@ use std::{result::Result, time::Duration};
 
 use thiserror::Error;
 
-mod async_std;
-mod mio;
+mod runtime;
 mod sync;
-mod tokio;
 
 const DEFAULT_SITUWAITION_TIMEOUT_MS: u64 = 3_000;
 const DEFAULT_SITUWAITION_CHECK_INTERVAL_MS: u64 = 250;
@@ -68,13 +66,13 @@ trait SituwaitionBase {
     type Error;
 
     /// Retrieve the options associated with this situwaition
-    fn options(&self) -> SituwaitionOpts;
+    fn options(&self) -> &SituwaitionOpts;
 
     /// Change the options associated with this situwaition
     fn set_options(
         &mut self,
-        update_fn: dyn Fn(SituwaitionOpts) -> SituwaitionOpts,
-    ) -> Result<SituwaitionOpts, SituwaitionError<()>>;
+        update_fn: impl Fn(&SituwaitionOpts) -> SituwaitionOpts,
+    ) -> Result<(), SituwaitionError<()>>;
 }
 
 /// Synchronously executed situwaitions

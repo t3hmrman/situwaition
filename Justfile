@@ -83,10 +83,17 @@ check-commit-count now before count:
 # Test #
 ########
 
+test_focus := env_var_or_default("TEST", "")
+
 test: test-unit test-int test-e2e
 
+# Run unit tests
 test-unit:
-    @{{cargo}} test
+    @{{cargo}} nextest run
+
+# Run unit tests continuously
+test-unit-watch:
+    @{{cargo}} watch -- cargo nextest run {{test_focus}}
 
 test-int:
     @{{cargo}} test
