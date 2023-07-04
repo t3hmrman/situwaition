@@ -8,7 +8,7 @@ use crate::{SituwaitionBase, SituwaitionError, SituwaitionOpts, SyncSituwaition}
 
 /// Synchronous situwaitioner
 #[allow(dead_code)]
-struct SyncExecutor<R, E> {
+struct SyncWaiter<R, E> {
     /// Options for the situwaition
     opts: SituwaitionOpts,
 
@@ -16,7 +16,7 @@ struct SyncExecutor<R, E> {
     check_fn: Box<dyn Fn() -> Result<R, E>>,
 }
 
-impl<R, E> SituwaitionBase for SyncExecutor<R, E> {
+impl<R, E> SituwaitionBase for SyncWaiter<R, E> {
     type Result = R;
     type Error = E;
 
@@ -33,16 +33,16 @@ impl<R, E> SituwaitionBase for SyncExecutor<R, E> {
     }
 }
 
-impl<R, E> SyncSituwaition for SyncExecutor<R, E> {
+impl<R, E> SyncSituwaition for SyncWaiter<R, E> {
     fn exec(&self) -> Result<R, E> {
         (self.check_fn)()
     }
 }
 
 #[allow(dead_code)]
-impl<R, E> SyncExecutor<R, E> {
-    fn from_fn(check_fn: impl Fn() -> Result<R, E> + 'static) -> SyncExecutor<R, E> {
-        SyncExecutor {
+impl<R, E> SyncWaiter<R, E> {
+    fn from_fn(check_fn: impl Fn() -> Result<R, E> + 'static) -> SyncWaiter<R, E> {
+        SyncWaiter {
             opts: SituwaitionOpts::default(),
             check_fn: Box::new(check_fn),
         }
@@ -52,18 +52,18 @@ impl<R, E> SyncExecutor<R, E> {
     fn with_opts(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         opts: SituwaitionOpts,
-    ) -> SyncExecutor<R, E> {
-        SyncExecutor {
+    ) -> SyncWaiter<R, E> {
+        SyncWaiter {
             opts,
             check_fn: Box::new(check_fn),
         }
     }
 
-    /// Create a SyncExecutor with only timeout customized
+    /// Create a SyncWaiter with only timeout customized
     fn with_timeout(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         timeout: Duration,
-    ) -> SyncExecutor<R, E> {
+    ) -> SyncWaiter<R, E> {
         Self::with_opts(
             Box::new(check_fn),
             SituwaitionOpts {
@@ -73,11 +73,11 @@ impl<R, E> SyncExecutor<R, E> {
         )
     }
 
-    /// Create a SyncExecutor with only check interval customized
+    /// Create a SyncWaiter with only check interval customized
     fn with_check_interval(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         check_interval: Duration,
-    ) -> SyncExecutor<R, E> {
+    ) -> SyncWaiter<R, E> {
         Self::with_opts(
             Box::new(check_fn),
             SituwaitionOpts {
@@ -93,6 +93,8 @@ impl<R, E> SyncExecutor<R, E> {
 // - Closures? (they're un-nameable though...?)
 // - Mutex (wait for a specific value)?
 // - RwLock (wait for a speicfic value)?
+
+// TODO: Builder w/ https://crates.io/crates/derive_builder
 
 // IDEA?: The wait for function could even take Sync stuff
 // And would basically start polling it for completion!
@@ -144,7 +146,7 @@ pub fn wait_for<R, E>(
 where
     E: std::error::Error,
 {
-    _wait_for(SyncExecutor::from_fn(check_fn))
+    _wait_for(SyncWaiter::from_fn(check_fn))
 }
 
 #[cfg(test)]
@@ -165,7 +167,7 @@ mod tests {
     fn test_unit_sync_executor_from_fn() {
         assert!(
             matches!(
-                SyncExecutor::from_fn(|| Ok::<bool, std::io::Error>(true)).exec(),
+                SyncWaiter::from_fn(|| Ok::<bool, std::io::Error>(true)).exec(),
                 Ok(true)
             ),
             "wait_for_fn with a simple fn is true"
@@ -175,7 +177,7 @@ mod tests {
     #[test]
     fn test_unit_sync_executor_exec_fail() {
         assert!(matches!(
-            SyncExecutor::with_timeout(
+            SyncWaiter::with_timeout(
                 || Err::<(), std::io::Error>(std::io::Error::new(ErrorKind::Other, "test")),
                 Duration::from_millis(500)
             )
@@ -188,7 +190,7 @@ mod tests {
     fn test_unit_sync_executor_exec_pass() {
         assert!(
             matches!(
-                SyncExecutor::with_check_interval(
+                SyncWaiter::with_check_interval(
                     || Ok::<bool, std::io::Error>(true),
                     Duration::from_millis(100)
                 )
@@ -204,7 +206,7 @@ mod tests {
         let start = Instant::now();
         assert!(
             matches!(
-                _wait_for(SyncExecutor::with_timeout(
+                _wait_for(SyncWaiter::with_timeout(
                     || Err::<(), std::io::Error>(std::io::Error::new(ErrorKind::Other, "test")),
                     Duration::from_millis(500)
                 )),
@@ -223,7 +225,7 @@ mod tests {
         let start = Instant::now();
         assert!(
             matches!(
-                _wait_for(SyncExecutor::with_check_interval(
+                _wait_for(SyncWaiter::with_check_interval(
                     || Ok::<bool, std::io::Error>(true),
                     Duration::from_millis(100)
                 )),
