@@ -1,28 +1,30 @@
-///! Situwaition
-///!
-///! <hr>
-///!
-///! This library makes it easy to wait for a situation (cutely named "situWAITion") to complete.
-///!
-///! Situwaition can be used in contexts with or without async runtimes, and generally does what you'd expect (tm):
-///!
-///! ```
-///! use situwaition::wait_for;
-///!
-///! fn main() -> Result<(), Box<dyn Error>> {
-///!     let value = 0;
-///!
-///!     let result: Result<&str> = wait_for(|| match value == 5 {
-///!         true => Ok("done!"),
-///!         false => {
-///!             value += 1; // NOTE: incrementing like this only works in a single threaded context!
-///!             Err("not yet")
-///!         },
-///!     });
-///! }
-///! ```
+//! Situwaition
+//!
+//! <hr>
+//!
+//! This library makes it easy to wait for a situation (cutely named "situWAITion") to complete.
+//!
+//! Situwaition can be used in contexts with or without async runtimes, and generally does what you'd expect (tm):
+//!
+//! ```
+//! use situwaition::wait_for;
+//!
+//! fn main() -> Result<(), Box<dyn Error>> {
+//!     let value = 0;
+//!
+//!     let result: Result<&str> = wait_for(|| match value == 5 {
+//!         true => Ok("done!"),
+//!         false => {
+//!             value += 1; // NOTE: incrementing like this only works in a single threaded context!
+//!             Err("not yet")
+//!         },
+//!     });
+//! }
+//! ```
+
 use std::{result::Result, time::Duration};
 
+use derive_builder::Builder;
 use thiserror::Error;
 
 #[cfg(any(feature = "tokio", feature = "async-std"))]
@@ -58,18 +60,18 @@ pub enum SituwaitionError<E> {
 
 /// Options for a given situwaition
 #[allow(dead_code)]
-#[derive(Debug)]
-struct SituwaitionOpts {
+#[derive(Debug, Clone, Builder)]
+pub struct SituwaitionOpts {
     pub timeout: Duration,
     pub check_interval: Duration,
 }
 
 impl Default for SituwaitionOpts {
     fn default() -> Self {
-        return SituwaitionOpts {
+        SituwaitionOpts {
             timeout: Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS),
             check_interval: Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS),
-        };
+        }
     }
 }
 
@@ -102,7 +104,7 @@ trait SyncSituwaition: SituwaitionBase {
 trait AsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
-    async fn exec(&self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
+    async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
 
 // It's possible that Situation-as-object is superior...
