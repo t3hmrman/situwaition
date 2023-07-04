@@ -25,22 +25,35 @@ use std::{result::Result, time::Duration};
 
 use thiserror::Error;
 
-mod runtime;
-mod sync;
+#[cfg(any(feature = "tokio", feature = "async-std"))]
+use async_trait::async_trait;
+
+pub mod runtime;
+pub mod sync;
 
 const DEFAULT_SITUWAITION_TIMEOUT_MS: u64 = 3_000;
 const DEFAULT_SITUWAITION_CHECK_INTERVAL_MS: u64 = 250;
 
+pub use sync::wait_for;
+
 /// The type of error that is thrown when
 #[derive(Debug, Error)]
 pub enum SituwaitionError<E> {
-    /// Errors that can arise from a situwation
-    #[error("update failed: {0}")]
-    UpdateFailed(String),
-
-    /// Errors from repeated failure
+    /// Timeout from repeated failure
     #[error("failed repeatedly until the timeout: {0}")]
     TimeoutError(E),
+
+    /// A single conditoin failure
+    #[error("condition check failed: {0}")]
+    ConditionFailed(E),
+
+    #[cfg(feature = "tokio")]
+    #[error("error joining tokio task: {0}")]
+    TokioJoinError(tokio::task::JoinError),
+
+    #[cfg(feature = "tokio")]
+    #[error("unexpected error")]
+    UnexpectedError,
 }
 
 /// Options for a given situwaition
@@ -84,12 +97,12 @@ trait SyncSituwaition: SituwaitionBase {
 
 /// This trait represents a "situwaition" that can be a"waited".
 /// note that how the waiting is done can differ by platform
-#[cfg(any(feature = "tokio", feature = "async-std", feature = "mio"))]
+#[cfg(any(feature = "tokio", feature = "async-std"))]
+#[async_trait]
 trait AsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
-    #[cfg(not(feature = "tokio"))]
-    async fn exec(&self) -> Result<Self::Result, Self::Error>;
+    async fn exec(&self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
 
 // It's possible that Situation-as-object is superior...
