@@ -1,12 +1,12 @@
 [package]
 name = "situwaition"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 rust-version = "1.70"
 authors = [
   "vados <vados@vadosware.io>"
 ]
-categories = [ "async", "utilities" ]
+categories = [ "async", "utilities", "tokio", "async-std" ]
 
 [[example]]
 name = "basic_sync"

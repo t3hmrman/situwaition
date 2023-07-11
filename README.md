@@ -10,6 +10,15 @@ cargo add situwaition --features async-std # use async-std
 cargo add situwaition --features tokio     # use tokio
 ```
 
+If you're editing `Cargo.toml` by hand:
+
+```toml
+[dependencies]
+situwaition = "0.1"
+#situwaition = { version = "0.1", features = [ "async-std" ] }
+#situwaition = { version = "0.1", features = [ "tokio" ] }
+```
+
 > **Warning**
 > `situation` does not allow using both `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
 
