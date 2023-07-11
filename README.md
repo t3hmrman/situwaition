@@ -1,8 +1,6 @@
-# ⏲ `situwation` - easily wait for conditions
+<h1 align="center">⏲ <code>situwaition</code></h1>
 
-`situwaition` is an utility library for waiting.
-
-`situwaition` runs your closure *continuously*, until an `Ok(..)` is received, or a timeout period elapses.
+`situwaition` runs a closure *continuously*, until an `Ok(..)` is received, or a timeout period elapses.
 
 ## Install
 
@@ -12,7 +10,8 @@ cargo add situwaition --features async-std # use async-std
 cargo add situwaition --features tokio     # use tokio
 ```
 
-Note that you cannot use BOTH `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
+> **Warning**
+> `situation` does not allow using both `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
 
 ## Quickstart
 
@@ -120,7 +119,7 @@ See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.r
 
 ### Why does `situwaition` assume that I'm using *either* `async-std` or `tokio`
 
-Because you probably are. If this is a problem for you, it *can* be changed, file an issue and let's chat about it. 
+Because you probably are. If this is a problem for you, it *can* be changed, file an issue and let's chat about it.
 
 ## Development
 
