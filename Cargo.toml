@@ -11,6 +11,7 @@ authors = [
   "vados <vados@vadosware.io>"
 ]
 categories = [ "asynchronous" ]
+repository = "https://github.com/t3hmrman/situwaition"
 
 [[example]]
 name = "sync"
