@@ -1,0 +1,41 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [0.1.0] - 2023-07-11
+
+### Documentation
+
+- Update README
+- Update README
+- Add more docs
+- More small docs improvements
+- Improve docs for more configuration example
+
+### Features
+
+- Add basic CI build
+- Add tokio support
+- Add async-std support
+- Add examples
+- Improve examples, run examples with tests
+
+### Miscellaneous Tasks
+
+- Initial commit
+- Bump version, add Cargo.toml examples
+
+### Refactor
+
+- Use just for test runs
+
+### Ci
+
+- Update CI YAML
+
+### Wip
+
+- Working sync v1
+- Write down ideas, stuff
+- External ergonomics, add bloat check
+
