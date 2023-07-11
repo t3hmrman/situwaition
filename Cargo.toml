@@ -2,6 +2,10 @@
 name = "situwaition"
 version = "0.1.0"
 edition = "2021"
+description = "Run a closure continuously, until is succeeds or times out."
+license = "MIT"
+license-file = "LICENSE"
+readme = "README.md"
 rust-version = "1.70"
 authors = [
   "vados <vados@vadosware.io>"
