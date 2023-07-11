@@ -12,6 +12,8 @@ cargo add situwaition --features async-std # use async-std
 cargo add situwaition --features tokio     # use tokio
 ```
 
+Note that you cannot use BOTH `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
+
 ## Quickstart
 
 ### Sync
@@ -113,6 +115,12 @@ See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.r
 
 [tokio]: https://crates.io/crates/tokio
 [async-std]: https://crates.io/crates/async-std
+
+## FAQ
+
+### Why does `situwaition` assume that I'm using *either* `async-std` or `tokio`
+
+Because you probably are. If this is a problem for you, it *can* be changed, file an issue and let's chat about it. 
 
 ## Development
 

@@ -5,9 +5,10 @@ use derive_builder::Builder;
 use crate::{SituwaitionBase, SituwaitionError, SituwaitionOpts};
 
 #[cfg(feature = "async-std")]
-mod async_std;
+pub mod async_std;
 #[cfg(feature = "tokio")]
-mod tokio;
+pub mod tokio;
+
 
 #[derive(Builder)]
 pub struct AsyncSituwaiter<F, A, R, E>
