@@ -20,7 +20,7 @@ situwaition = "0.1"
 ```
 
 > **Warning**
-> `situation` does not allow using both `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
+> `situwaition` does not allow using both `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
 
 ## Quickstart
 
