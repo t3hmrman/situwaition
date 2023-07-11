@@ -10,7 +10,7 @@ rust-version = "1.70"
 authors = [
   "vados <vados@vadosware.io>"
 ]
-categories = [ "async", "utilities", "tokio", "async-std" ]
+categories = [ "asynchronous" ]
 
 [[example]]
 name = "sync"
