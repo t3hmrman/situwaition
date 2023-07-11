@@ -106,30 +106,3 @@ trait AsyncSituwaition: SituwaitionBase {
     /// or fails with a timeout
     async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
-
-// It's possible that Situation-as-object is superior...
-//
-// (!) MAYBE do both? taking the impl is the most permissive way to allow it to work
-// AND we can provide special interfaces for specific things.
-//
-// Does situation-as-object enable sync/async use easier? fn -> Result<Future<...>, Error> ??
-// Do the simple thing and just spawn tasks to do the work synchronously but far away?
-// (!) NO, if async is enabled, then exec should be an async function!
-
-// Now can the run function be hidden?
-
-// Q: Should people be able to manipulate the waiting stuff *at all*?
-// maybe they should just *get back* something that adheres to the interface?
-//
-// kind of like a 'zero trust' interface -- fn (in: impl A) -> impl B
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn it_works() {
-//         let result = add(2, 2);
-//         assert_eq!(result, 4);
-//     }
-// }
