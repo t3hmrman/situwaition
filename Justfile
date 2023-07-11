@@ -90,6 +90,8 @@ test: test-unit test-int
 # Run unit tests
 test-unit:
     @{{cargo}} nextest run -E 'kind(lib)'
+    @{{cargo}} nextest run -F tokio -E 'kind(lib)'
+    @{{cargo}} nextest run -F async-std -E 'kind(lib)'
 
 # Run unit tests continuously
 test-unit-watch:

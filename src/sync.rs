@@ -149,7 +149,7 @@ where
     _wait_for(SyncWaiter::from_fn(check_fn))
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(any(feature = "async-std", feature = "tokio"))))]
 mod tests {
     use std::io::ErrorKind;
 
