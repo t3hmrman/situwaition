@@ -7,10 +7,10 @@ use tokio::time::{sleep, Instant};
 
 use crate::{AsyncSituwaition, SituwaitionError};
 
-use super::AsyncSituwaiter;
+use super::AsyncWaiter;
 
 #[async_trait]
-impl<F, A, R, E> AsyncSituwaition for AsyncSituwaiter<F, A, R, E>
+impl<F, A, R, E> AsyncSituwaition for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,
@@ -49,7 +49,7 @@ where
     F: Fn() -> G + Send,
     G: Future<Output = Result<R, E>> + Send,
 {
-    AsyncSituwaiter::from_factory(factory).exec().await
+    AsyncWaiter::from_factory(factory).exec().await
 }
 
 #[cfg(test)]
@@ -74,7 +74,7 @@ mod tests {
     async fn test_unit_tokio_async_executor_from_fn() {
         assert!(
             matches!(
-                AsyncSituwaiter::from_factory(|| async { Ok::<bool, std::io::Error>(true) })
+                AsyncWaiter::from_factory(|| async { Ok::<bool, std::io::Error>(true) })
                     .exec()
                     .await,
                 Ok(true)
@@ -86,7 +86,7 @@ mod tests {
     #[tokio::test]
     async fn test_unit_tokio_async_executor_exec_fail() {
         assert!(matches!(
-            AsyncSituwaiter::with_timeout(
+            AsyncWaiter::with_timeout(
                 || async {
                     Err::<(), std::io::Error>(std::io::Error::new(ErrorKind::Other, "test"))
                 },
@@ -102,7 +102,7 @@ mod tests {
     async fn test_unit_tokio_async_executor_exec_pass() {
         assert!(
             matches!(
-                AsyncSituwaiter::with_check_interval(
+                AsyncWaiter::with_check_interval(
                     || async { Ok::<bool, std::io::Error>(true) },
                     Duration::from_millis(100),
                 )
@@ -120,7 +120,7 @@ mod tests {
 
         assert!(
             matches!(
-                AsyncSituwaiter::with_timeout(
+                AsyncWaiter::with_timeout(
                     || async {
                         Err::<(), std::io::Error>(std::io::Error::new(ErrorKind::Other, "test"))
                     },
@@ -144,7 +144,7 @@ mod tests {
 
         assert!(
             matches!(
-                AsyncSituwaiter::with_check_interval(
+                AsyncWaiter::with_check_interval(
                     || async { Ok::<bool, std::io::Error>(true) },
                     Duration::from_millis(100)
                 )

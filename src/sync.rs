@@ -8,7 +8,7 @@ use crate::{SituwaitionBase, SituwaitionError, SituwaitionOpts, SyncSituwaition}
 
 /// Synchronous situwaitioner
 #[allow(dead_code)]
-struct SyncWaiter<R, E> {
+pub struct SyncWaiter<R, E> {
     /// Options for the situwaition
     opts: SituwaitionOpts,
 
@@ -41,7 +41,7 @@ impl<R, E> SyncSituwaition for SyncWaiter<R, E> {
 
 #[allow(dead_code)]
 impl<R, E> SyncWaiter<R, E> {
-    fn from_fn(check_fn: impl Fn() -> Result<R, E> + 'static) -> SyncWaiter<R, E> {
+    pub fn from_fn(check_fn: impl Fn() -> Result<R, E> + 'static) -> SyncWaiter<R, E> {
         SyncWaiter {
             opts: SituwaitionOpts::default(),
             check_fn: Box::new(check_fn),
@@ -49,7 +49,7 @@ impl<R, E> SyncWaiter<R, E> {
     }
 
     /// Create a sync executor with options fully specified
-    fn with_opts(
+    pub fn with_opts(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         opts: SituwaitionOpts,
     ) -> SyncWaiter<R, E> {
@@ -60,7 +60,7 @@ impl<R, E> SyncWaiter<R, E> {
     }
 
     /// Create a SyncWaiter with only timeout customized
-    fn with_timeout(
+    pub fn with_timeout(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         timeout: Duration,
     ) -> SyncWaiter<R, E> {
@@ -74,7 +74,7 @@ impl<R, E> SyncWaiter<R, E> {
     }
 
     /// Create a SyncWaiter with only check interval customized
-    fn with_check_interval(
+    pub fn with_check_interval(
         check_fn: impl Fn() -> Result<R, E> + 'static,
         check_interval: Duration,
     ) -> SyncWaiter<R, E> {
@@ -87,17 +87,6 @@ impl<R, E> SyncWaiter<R, E> {
         )
     }
 }
-
-// TODO: write impls for fns that naturally should be awaitable
-// - Functions, obviously
-// - Closures? (they're un-nameable though...?)
-// - Mutex (wait for a specific value)?
-// - RwLock (wait for a speicfic value)?
-
-// TODO: Builder w/ https://crates.io/crates/derive_builder
-
-// IDEA?: The wait for function could even take Sync stuff
-// And would basically start polling it for completion!
 
 /// Fully synchronous waiting for a situwaition
 /// This function will sleep the main thread and pause execution!

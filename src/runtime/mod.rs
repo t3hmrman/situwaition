@@ -11,7 +11,7 @@ pub mod tokio;
 
 
 #[derive(Builder)]
-pub struct AsyncSituwaiter<F, A, R, E>
+pub struct AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,
@@ -25,7 +25,7 @@ where
     pub factory: A,
 }
 
-impl<F, A, R, E> SituwaitionBase for AsyncSituwaiter<F, A, R, E>
+impl<F, A, R, E> SituwaitionBase for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,
@@ -48,17 +48,17 @@ where
     }
 }
 
-impl<F, A, R, E> AsyncSituwaiter<F, A, R, E>
+impl<F, A, R, E> AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,
     R: Send + Sync,
     E: Error + Send + Sync,
 {
-    /// Convert an existing async function factory into an AsyncSituwaiter
+    /// Convert an existing async function factory into an AsyncWaiter
     #[allow(dead_code)]
-    fn from_factory(factory: A) -> AsyncSituwaiter<F, A, R, E> {
-        AsyncSituwaiter {
+    pub fn from_factory(factory: A) -> AsyncWaiter<F, A, R, E> {
+        AsyncWaiter {
             opts: SituwaitionOpts::default(),
             factory,
         }
@@ -66,13 +66,13 @@ where
 
     /// Create a sync executor with options fully specified
     #[allow(dead_code)]
-    fn with_opts(factory: A, opts: SituwaitionOpts) -> AsyncSituwaiter<F, A, R, E> {
-        AsyncSituwaiter { opts, factory }
+    pub fn with_opts(factory: A, opts: SituwaitionOpts) -> AsyncWaiter<F, A, R, E> {
+        AsyncWaiter { opts, factory }
     }
 
     /// Create a SyncExecutor with only timeout customized
     #[allow(dead_code)]
-    fn with_timeout(factory: A, timeout: Duration) -> AsyncSituwaiter<F, A, R, E> {
+    pub fn with_timeout(factory: A, timeout: Duration) -> AsyncWaiter<F, A, R, E> {
         Self::with_opts(
             factory,
             SituwaitionOpts {
@@ -84,7 +84,7 @@ where
 
     /// Create a SyncExecutor with only check interval customized
     #[allow(dead_code)]
-    fn with_check_interval(factory: A, check_interval: Duration) -> AsyncSituwaiter<F, A, R, E> {
+    pub fn with_check_interval(factory: A, check_interval: Duration) -> AsyncWaiter<F, A, R, E> {
         Self::with_opts(
             factory,
             SituwaitionOpts {

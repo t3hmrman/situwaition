@@ -34,7 +34,7 @@ use situwaition::wait_for;
 // ...
 
     // Do some waiting
-    let result = wait_for(move || {
+    let result = wait_for(|| {
         // Get the current value from the mutex
         if some_condition { Ok(value) } else { Err(SomeError) ]
     });
@@ -51,7 +51,7 @@ use situwaition::wait_for;
 `situwaition` will run the function continuously, *ignoring* `Error(..)` responses until:
 
 - The function resolves to an `Ok(..)` variant
-- The configured timeout (3s by default) is reached.
+- The configured timeout (3s by default, checking every 250ms) is reached.
 
 See a full example in [`examples/basic_sync.rs`](./examples/basic_sync.rs).
 
@@ -110,6 +110,20 @@ use situwaition::runtime::tokio::wait_for;
 ```
 
 See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.rs).
+
+### Verbose configuration
+
+If you'd like to control more finely the intervals and how many times a check will occur, you can create the `Waiter` object(s) yourself:
+
+```rust
+// Synchronous code
+situwaition::sync::SyncWaiter::with_timeout(|| { ... }, Duration::from_millis(500));
+
+// Asynchronous code (either tokio or async-std)
+situwaition::runtime::AsyncWaiter::with_timeout(|| async { ... }, Duration::from_millis(500)).exect().await;
+```
+
+See the methods on [`SyncWaiter`](./src/sync.rs) and [`AsyncWaiter`](./src/runtime/mod.rs) for more options.
 
 ## Supported environments
 

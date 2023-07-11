@@ -41,5 +41,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert!(matches!(result, 42));
     eprintln!("resulting value is: {}", result);
 
+    situwaition::sync::SyncWaiter::with_timeout(|| { ... }, Duration::from_millis(500));
+
+
     Ok(())
 }
