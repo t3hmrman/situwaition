@@ -41,7 +41,6 @@ ensure-binary bin env_name:
 setup:
     @{{just}} ensure-binary rustc RUSTC
     @{{just}} ensure-binary cargo CARGO
-    @{{just}} ensure-binary cargo-watch CARGO_WATCH
 
 # Format
 fmt:
@@ -53,6 +52,7 @@ lint:
 
 # Lint the project
 lint-watch:
+    @{{just}} ensure-binary cargo-watch CARGO_WATCH
     @{{cargo}} watch --watch=src --shell 'just lint'
 
 # Build
@@ -61,6 +61,7 @@ build:
 
 # Build continuously (development mode)
 build-watch:
+    @{{just}} ensure-binary cargo-watch CARGO_WATCH
     {{cargo}} watch -x build
 
 # Build the release version of the binary
@@ -95,6 +96,7 @@ test-unit:
 
 # Run unit tests continuously
 test-unit-watch:
+    @{{just}} ensure-binary cargo-watch CARGO_WATCH
     @{{cargo}} watch -- {{cargo}} nextest run {{test_focus}}
 
 test-int:
