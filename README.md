@@ -53,7 +53,11 @@ use situwaition::wait_for;
 - The function resolves to an `Ok(..)` variant
 - The configured timeout (3s by default, checking every 250ms) is reached.
 
-See a full example in [`examples/basic_sync.rs`](./examples/basic_sync.rs).
+See a full example in [`examples/sync.rs`](./examples/sync.rs). To run the sync example:
+
+```
+cargo run --example sync
+```
 
 ### Tokio
 
@@ -83,7 +87,11 @@ Note here that you are passing a *`Future` factory* to the function -- a functio
 
 The usual `async` usage rules apply -- use `move`, `Arc`s, `Mutex`es, and other ownership/synchronization primitives where appropriate.
 
-See a full example in [`examples/tokio/main.rs`](./examples/tokio/main.rs).
+See a full example in [`examples/tokio/main.rs`](./examples/tokio/main.rs). To run the tokio example:
+
+```console
+cargo run --example tokio --features=tokio
+```
 
 ### async-std
 
@@ -109,7 +117,11 @@ use situwaition::runtime::tokio::wait_for;
 // ...
 ```
 
-See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.rs).
+See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.rs). To run the async-std example:
+
+```console
+cargo run --example async-std --features=async-std
+```
 
 ### Verbose configuration
 

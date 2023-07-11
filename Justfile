@@ -27,10 +27,11 @@ print-sha:
 
 # Ensure a binary is present
 ensure-binary bin env_name:
-    #/usr/bin/env -S bash -euo pipefail
+    #!/usr/bin/env -S bash -euo pipefail
     if [ -z "$(command -v {{bin}})" ]; then
-    echo "Missing binary [{{bin}}], make sure it is installed & on your PATH (or override it's location with {{env_name}})";
-    exit 1;
+      echo "Missing binary [{{bin}}], make sure it is installed & on your PATH (or override it's location with {{env_name}})";
+      echo "(if the binary is not on your system, you may need to install the package via cargo)";
+      exit 1;
     fi
 
 ###########
@@ -86,10 +87,11 @@ check-commit-count now before count:
 
 test_focus := env_var_or_default("TEST", "")
 
-test: test-unit test-int
+test: test-unit test-int test-examples
 
 # Run unit tests
 test-unit:
+    @{{just}} ensure-binary cargo-nextest CARGO_NEXTEST
     @{{cargo}} nextest run -E 'kind(lib)'
     @{{cargo}} nextest run -F tokio -E 'kind(lib)'
     @{{cargo}} nextest run -F async-std -E 'kind(lib)'
@@ -97,10 +99,17 @@ test-unit:
 # Run unit tests continuously
 test-unit-watch:
     @{{just}} ensure-binary cargo-watch CARGO_WATCH
+    @{{just}} ensure-binary cargo-nextest CARGO_NEXTEST
     @{{cargo}} watch -- {{cargo}} nextest run {{test_focus}}
 
 test-int:
+    @{{just}} ensure-binary cargo-nextest CARGO_NEXTEST
     @{{cargo}} nextest run -E 'kind(test)'
+
+test-examples:
+    @{{cargo}} run --example sync
+    @{{cargo}} run --example tokio --features=tokio
+    @{{cargo}} run --example async-std --features=async-std
 
 ######################
 # Release Management #

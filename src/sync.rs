@@ -1,5 +1,4 @@
 use std::{
-    error::Error,
     thread::sleep,
     time::{Duration, Instant},
 };
@@ -34,8 +33,24 @@ impl<R, E> SituwaitionBase for SyncWaiter<R, E> {
 }
 
 impl<R, E> SyncSituwaition for SyncWaiter<R, E> {
-    fn exec(&self) -> Result<R, E> {
-        (self.check_fn)()
+    fn exec(&self) -> Result<R, SituwaitionError<E>> {
+        let start = Instant::now();
+
+        // Run the situwaition until it succeeds
+        loop {
+            match (self.check_fn)() {
+                Ok(v) => break Ok(v),
+                Err(e) => {
+                    let now = Instant::now();
+                    if now - start > self.opts.timeout {
+                        break Err(SituwaitionError::TimeoutError(e));
+                    }
+                }
+            }
+
+            // busy wait for the check interval
+            sleep(self.opts.check_interval);
+        }
     }
 }
 
@@ -88,38 +103,6 @@ impl<R, E> SyncWaiter<R, E> {
     }
 }
 
-/// Fully synchronous waiting for a situwaition
-/// This function will sleep the main thread and pause execution!
-#[allow(dead_code)]
-fn _wait_for<R, E>(
-    wait_fn: impl SyncSituwaition<Result = R, Error = E>,
-) -> Result<R, SituwaitionError<E>>
-where
-    E: Error,
-{
-    let SituwaitionOpts {
-        timeout,
-        check_interval,
-    } = wait_fn.options();
-    let start = Instant::now();
-
-    // Run the situwaition until it succeeds
-    loop {
-        match wait_fn.exec() {
-            Ok(v) => break Ok(v),
-            Err(e) => {
-                let now = Instant::now();
-                if now - start > *timeout {
-                    break Err(SituwaitionError::TimeoutError(e));
-                }
-            }
-        }
-
-        // busy wait for the check interval
-        sleep(*check_interval);
-    }
-}
-
 /////////////////////
 // Implementations //
 /////////////////////
@@ -135,7 +118,7 @@ pub fn wait_for<R, E>(
 where
     E: std::error::Error,
 {
-    _wait_for(SyncWaiter::from_fn(check_fn))
+    SyncWaiter::from_fn(check_fn).exec()
 }
 
 #[cfg(all(test, not(any(feature = "async-std", feature = "tokio"))))]
@@ -171,7 +154,7 @@ mod tests {
                 Duration::from_millis(500)
             )
             .exec(),
-            Err(std::io::Error { .. }),
+            Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
         ),);
     }
 
@@ -195,10 +178,10 @@ mod tests {
         let start = Instant::now();
         assert!(
             matches!(
-                _wait_for(SyncWaiter::with_timeout(
+                SyncWaiter::with_timeout(
                     || Err::<(), std::io::Error>(std::io::Error::new(ErrorKind::Other, "test")),
                     Duration::from_millis(500)
-                )),
+                ).exec(),
                 Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
             ),
             "always erroring check fails in 100ms with timeout of 100ms"
@@ -214,10 +197,10 @@ mod tests {
         let start = Instant::now();
         assert!(
             matches!(
-                _wait_for(SyncWaiter::with_check_interval(
+                SyncWaiter::with_check_interval(
                     || Ok::<bool, std::io::Error>(true),
                     Duration::from_millis(100)
-                )),
+                ).exec(),
                 Ok(true)
             ),
             "always passing check passes in 100m with check interval of 100ms"

@@ -76,7 +76,7 @@ impl Default for SituwaitionOpts {
 }
 
 /// The basic requirements of any situwaition
-trait SituwaitionBase {
+pub trait SituwaitionBase {
     type Result;
     type Error;
 
@@ -91,17 +91,17 @@ trait SituwaitionBase {
 }
 
 /// Synchronously executed situwaitions
-trait SyncSituwaition: SituwaitionBase {
+pub trait SyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
-    fn exec(&self) -> Result<Self::Result, Self::Error>;
+    fn exec(&self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
 
 /// This trait represents a "situwaition" that can be a"waited".
 /// note that how the waiting is done can differ by platform
 #[cfg(any(feature = "tokio", feature = "async-std"))]
 #[async_trait]
-trait AsyncSituwaition: SituwaitionBase {
+pub trait AsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
     async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;

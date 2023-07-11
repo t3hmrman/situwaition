@@ -1,9 +1,10 @@
 use std::{
     result::Result,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
-use situwaition::runtime::async_std::wait_for;
+use situwaition::{runtime::async_std::wait_for, runtime::AsyncWaiter, AsyncSituwaition};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -44,6 +45,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     assert!(matches!(result, 42));
     eprintln!("resulting value is: {}", result);
+
+    // An always failing example
+    let result = AsyncWaiter::with_timeout(
+        || async { Err(ExampleError::NotDoneCountingError) as Result<(), ExampleError> },
+        Duration::from_millis(500),
+    )
+    .exec()
+    .await;
+    eprintln!("asynchronous always-failling result: {:?}", result);
 
     Ok(())
 }

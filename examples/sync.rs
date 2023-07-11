@@ -1,9 +1,10 @@
 use std::{
     result::Result,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
-use situwaition::sync::wait_for;
+use situwaition::{wait_for, SyncSituwaition};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -23,6 +24,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let value = Arc::new(Mutex::new(0));
     let shared_value = value.clone();
 
+    eprintln!("finished setup");
     let result = wait_for(move || {
         // Get the current value from the mutex
         let mut current_value = shared_value
@@ -30,6 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|_| ExampleError::MutexPoisonError)?;
 
         // Act on the current value
+        eprintln!("acting on unlocked value... {current_value}");
         if *current_value >= 3 {
             Ok(42)
         } else {
@@ -41,8 +44,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert!(matches!(result, 42));
     eprintln!("resulting value is: {}", result);
 
-    situwaition::sync::SyncWaiter::with_timeout(|| { ... }, Duration::from_millis(500));
-
+    // Synchronous wait
+    let result = situwaition::sync::SyncWaiter::with_timeout(
+        || Err(ExampleError::NotDoneCountingError) as Result<(), ExampleError>,
+        Duration::from_millis(500),
+    )
+    .exec();
+    eprintln!("synchronous always-failling result: {:?}", result);
 
     Ok(())
 }
