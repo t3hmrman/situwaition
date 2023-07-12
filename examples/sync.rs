@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = situwaition::sync::SyncWaiter::with_timeout(
         || Err(ExampleError::NotDoneCountingError) as Result<(), ExampleError>,
         Duration::from_millis(500),
-    )
+    )?
     .exec();
     eprintln!("synchronous always-failling result: {:?}", result);
 

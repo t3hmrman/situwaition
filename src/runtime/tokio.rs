@@ -3,7 +3,7 @@
 use std::{error::Error, future::Future};
 
 use async_trait::async_trait;
-use tokio::time::{sleep, Instant};
+use tokio::time::{sleep, timeout, Instant};
 
 use crate::{AsyncSituwaition, SituwaitionError};
 
@@ -19,12 +19,22 @@ where
 {
     async fn exec(&mut self) -> Result<R, SituwaitionError<E>> {
         let start = Instant::now();
+        let check_timeout = self.opts.timeout;
+        let cooldown = self.opts.check_cooldown;
 
         loop {
             let fut = (self.factory)();
-            match fut.await {
-                Ok(v) => return Ok(v),
-                Err(e) => {
+            match timeout(check_timeout, fut).await {
+                // Check completed in time and successfully and we can return
+                Ok(Ok(v)) => return Ok(v),
+                // Check timed out
+                Err(_) => return Err(SituwaitionError::CheckTimeoutError),
+                // Check completed in time but failed
+                Ok(Err(e)) => {
+                    if let Some(t) = cooldown {
+                        sleep(t).await;
+                    }
+
                     if Instant::now() - start > self.opts.timeout {
                         return Err(SituwaitionError::TimeoutError(e));
                     }
@@ -71,7 +81,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_unit_tokio_async_executor_from_fn() {
+    async fn test_unit_tokio_from_fn() {
         assert!(
             matches!(
                 AsyncWaiter::from_factory(|| async { Ok::<bool, std::io::Error>(true) })
@@ -84,7 +94,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_unit_tokio_async_executor_exec_fail() {
+    async fn test_unit_tokio_exec_fail() {
         assert!(matches!(
             AsyncWaiter::with_timeout(
                 || async {
@@ -92,6 +102,7 @@ mod tests {
                 },
                 Duration::from_millis(500)
             )
+            .expect("failed to create")
             .exec()
             .await,
             Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
@@ -99,13 +110,14 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_unit_tokio_async_executor_exec_pass() {
+    async fn test_unit_tokio_exec_pass() {
         assert!(
             matches!(
                 AsyncWaiter::with_check_interval(
                     || async { Ok::<bool, std::io::Error>(true) },
                     Duration::from_millis(100),
                 )
+                .expect("failed to create")
                 .exec()
                 .await,
                 Ok(true)
@@ -115,7 +127,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_unit_tokio_wait_for_async_executor_with_timeout() {
+    async fn test_unit_tokio_wait_for_with_timeout() {
         let start = tokio::time::Instant::now();
 
         assert!(
@@ -126,6 +138,7 @@ mod tests {
                     },
                     Duration::from_millis(500),
                 )
+                .expect("failed to create")
                 .exec()
                 .await,
                 Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
@@ -139,7 +152,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_unit_tokio_async_executor_with_check_interval() {
+    async fn test_unit_tokio_with_check_interval() {
         let start = Instant::now();
 
         assert!(
@@ -148,6 +161,7 @@ mod tests {
                     || async { Ok::<bool, std::io::Error>(true) },
                     Duration::from_millis(100)
                 )
+                .expect("failed to create")
                 .exec()
                 .await,
                 Ok(true)
@@ -157,6 +171,31 @@ mod tests {
         assert!(
             Instant::now() - start < Duration::from_millis(250),
             "passed faster than default interval (250ms) w/ shorter interval"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_unit_tokio_with_long_check() {
+        let start = Instant::now();
+        assert!(
+            matches!(
+                AsyncWaiter::with_timeout(
+                    || async {
+                        sleep(Duration::from_millis(500)).await;
+                        Ok::<bool, std::io::Error>(true)
+                    },
+                    Duration::from_millis(250)
+                )
+                .expect("failed to create")
+                .exec()
+                .await,
+                Err(SituwaitionError::CheckTimeoutError),
+            ),
+            "check that finishes in 500ms times out in 100ms as configured"
+        );
+        assert!(
+            Instant::now() - start < Duration::from_millis(500),
+            "timed out before the check completed"
         );
     }
 }

@@ -46,11 +46,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert!(matches!(result, 42));
     eprintln!("resulting value is: {}", result);
 
-    // An always failing example
-    let result = AsyncWaiter::with_timeout(
+    // This async waiter always fails, so it will resolve to a failure in 500ms
+    let _ = AsyncWaiter::with_timeout(
         || async { Err(ExampleError::NotDoneCountingError) as Result<(), ExampleError> },
         Duration::from_millis(500),
-    )
+    )?
     .exec()
     .await;
     eprintln!("asynchronous always-failling result: {:?}", result);
