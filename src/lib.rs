@@ -45,25 +45,32 @@ pub enum SituwaitionError<E> {
     #[error("failed repeatedly until the timeout: {0}")]
     TimeoutError(E),
 
+    #[error("check fn run exceeded the timeout")]
+    CheckTimeoutError,
+
     /// A single conditoin failure
     #[error("condition check failed: {0}")]
     ConditionFailed(E),
 
-    #[cfg(feature = "tokio")]
-    #[error("error joining tokio task: {0}")]
-    TokioJoinError(tokio::task::JoinError),
-
-    #[cfg(feature = "tokio")]
-    #[error("unexpected error")]
-    UnexpectedError,
+    #[error("unexpected error: {0}")]
+    UnexpectedError(String),
 }
 
 /// Options for a given situwaition
 #[allow(dead_code)]
 #[derive(Debug, Clone, Builder)]
 pub struct SituwaitionOpts {
+    /// The maximum time to wait for a situwaition
     pub timeout: Duration,
+
+    /// How often to check for a passing condition.
+    /// Note that in the synchronous case, this determines how quickly
+    /// you can return *before* a check actually completes (i.e. timing in 100ms when check_fn takes 500ms)
     pub check_interval: Duration,
+
+    /// Time to wait after a check has been performed.
+    /// Use this to avoid running resource-intensive checks too frequently
+    pub check_cooldown: Option<Duration>,
 }
 
 impl Default for SituwaitionOpts {
@@ -71,6 +78,7 @@ impl Default for SituwaitionOpts {
         SituwaitionOpts {
             timeout: Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS),
             check_interval: Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS),
+            check_cooldown: None,
         }
     }
 }
@@ -94,7 +102,7 @@ pub trait SituwaitionBase {
 pub trait SyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
-    fn exec(&self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
+    fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
 
 /// This trait represents a "situwaition" that can be a"waited".
@@ -105,4 +113,14 @@ pub trait AsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
     async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
+}
+
+/// Errors that are thrown during waiter creation
+#[derive(Debug, Clone, Error)]
+pub enum WaiterCreationError {
+    #[error("invalid timeout: {0}")]
+    InvalidTimeout(String),
+
+    #[error("invalid interval: {0}")]
+    InvalidInterval(String),
 }

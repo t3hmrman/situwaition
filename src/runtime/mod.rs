@@ -2,13 +2,15 @@ use std::{error::Error, future::Future, time::Duration};
 
 use derive_builder::Builder;
 
-use crate::{SituwaitionBase, SituwaitionError, SituwaitionOpts};
+use crate::{
+    SituwaitionBase, SituwaitionError, SituwaitionOpts, WaiterCreationError,
+    DEFAULT_SITUWAITION_CHECK_INTERVAL_MS, DEFAULT_SITUWAITION_TIMEOUT_MS,
+};
 
 #[cfg(feature = "async-std")]
 pub mod async_std;
 #[cfg(feature = "tokio")]
 pub mod tokio;
-
 
 #[derive(Builder)]
 pub struct AsyncWaiter<F, A, R, E>
@@ -72,25 +74,41 @@ where
 
     /// Create a SyncExecutor with only timeout customized
     #[allow(dead_code)]
-    pub fn with_timeout(factory: A, timeout: Duration) -> AsyncWaiter<F, A, R, E> {
-        Self::with_opts(
+    pub fn with_timeout(
+        factory: A,
+        timeout: Duration,
+    ) -> Result<AsyncWaiter<F, A, R, E>, WaiterCreationError> {
+        if timeout < Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS) {
+            return Err(WaiterCreationError::InvalidTimeout(
+                format!("supplied timeout ({}ms) is shorter the default timeout ({DEFAULT_SITUWAITION_CHECK_INTERVAL_MS}ms)", timeout.as_millis())
+            ));
+        }
+        Ok(Self::with_opts(
             factory,
             SituwaitionOpts {
                 timeout,
                 ..SituwaitionOpts::default()
             },
-        )
+        ))
     }
 
     /// Create a SyncExecutor with only check interval customized
     #[allow(dead_code)]
-    pub fn with_check_interval(factory: A, check_interval: Duration) -> AsyncWaiter<F, A, R, E> {
-        Self::with_opts(
+    pub fn with_check_interval(
+        factory: A,
+        check_interval: Duration,
+    ) -> Result<AsyncWaiter<F, A, R, E>, WaiterCreationError> {
+        if check_interval > Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS) {
+            return Err(WaiterCreationError::InvalidTimeout(
+                format!("supplied check interval ({}ms) is larger than the default timeout ({DEFAULT_SITUWAITION_TIMEOUT_MS}ms)", check_interval.as_millis())
+            ));
+        }
+        Ok(Self::with_opts(
             factory,
             SituwaitionOpts {
                 check_interval,
                 ..SituwaitionOpts::default()
             },
-        )
+        ))
     }
 }

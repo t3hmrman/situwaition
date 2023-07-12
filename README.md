@@ -128,11 +128,16 @@ cargo run --example async-std --features=async-std
 If you'd like to control more finely the intervals and how many times a check will occur, you can create the `Waiter` object(s) yourself:
 
 ```rust
+use situwaition::runtime::AsyncWaiter;
+use situwaition::runtime::SyncWaiter;
+
 // Synchronous code
-situwaition::sync::SyncWaiter::with_timeout(|| { ... }, Duration::from_millis(500));
+SyncWaiter::with_timeout(|| { ... }, Duration::from_millis(500))?;
 
 // Asynchronous code (either tokio or async-std)
-situwaition::runtime::AsyncWaiter::with_timeout(|| async { ... }, Duration::from_millis(500)).exect().await;
+AsyncWaiter::with_timeout(|| async { ... }, Duration::from_millis(500))?
+    .exec()
+    .await;
 ```
 
 See the methods on [`SyncWaiter`](./src/sync.rs) and [`AsyncWaiter`](./src/runtime/mod.rs) for more options.
