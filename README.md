@@ -14,9 +14,9 @@ If you're editing `Cargo.toml` by hand:
 
 ```toml
 [dependencies]
-situwaition = "0.2"
-#situwaition = { version = "0.2", features = [ "async-std" ] }
-#situwaition = { version = "0.2", features = [ "tokio" ] }
+situwaition = "0.3"
+#situwaition = { version = "0.3", features = [ "async-std" ] }
+#situwaition = { version = "0.3", features = [ "tokio" ] }
 ```
 
 > **Warning**
