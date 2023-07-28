@@ -19,9 +19,6 @@ situwaition = "0.3"
 #situwaition = { version = "0.3", features = [ "tokio" ] }
 ```
 
-> **Warning**
-> `situwaition` does not allow using both `async-std` and `tokio` features at the same time (see [the FAQ below](#FAQ)).
-
 ## Quickstart
 
 ### Sync
@@ -154,12 +151,6 @@ See the methods on [`SyncWaiter`](./src/sync.rs) and [`AsyncWaiter`](./src/runti
 
 [tokio]: https://crates.io/crates/tokio
 [async-std]: https://crates.io/crates/async-std
-
-## FAQ
-
-### Why does `situwaition` assume that I'm using *either* `async-std` or `tokio`
-
-Because you probably are. If this is a problem for you, it *can* be changed, file an issue and let's chat about it.
 
 ## Development
 
