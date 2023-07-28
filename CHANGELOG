@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2] - 2023-07-28
+
+### Features
+
+- Add doc_cfg for feature-specific items
+
 ## [0.2.1] - 2023-07-12
 
 ### Bug Fixes
