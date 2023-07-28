@@ -21,6 +21,8 @@
 //!     });
 //! }
 //! ```
+//!
+//! The example above demonstrates the synchronous usage, but `tokio` and `async-std` and corresponding modules are available as well.
 
 use std::{result::Result, time::Duration};
 
@@ -105,11 +107,21 @@ pub trait SyncSituwaition: SituwaitionBase {
     fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
 }
 
-/// This trait represents a "situwaition" that can be a"waited".
+/// This trait represents a "situwaition" that can be a"waited", with tokio.
 /// note that how the waiting is done can differ by platform
-#[cfg(any(feature = "tokio", feature = "async-std"))]
+#[cfg(feature = "tokio")]
 #[async_trait]
-pub trait AsyncSituwaition: SituwaitionBase {
+pub trait TokioAsyncSituwaition: SituwaitionBase {
+    /// Execute the situwaition, and wait until it resolves
+    /// or fails with a timeout
+    async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;
+}
+
+/// This trait represents a "situwaition" that can be a"waited", with async-std.
+/// note that how the waiting is done can differ by platform
+#[cfg(feature = "async-std")]
+#[async_trait]
+pub trait AsyncStdAsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
     /// or fails with a timeout
     async fn exec(&mut self) -> Result<Self::Result, SituwaitionError<Self::Error>>;

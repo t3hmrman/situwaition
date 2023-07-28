@@ -1,3 +1,4 @@
+#![cfg_attr(all(doc, CHANNEL_NIGHTLY), feature(doc_auto_cfg))]
 #![cfg(feature = "async-std")]
 
 use std::{error::Error, future::Future, time::Instant};
@@ -5,12 +6,12 @@ use std::{error::Error, future::Future, time::Instant};
 use async_std::{future::timeout, task::sleep};
 use async_trait::async_trait;
 
-use crate::{AsyncSituwaition, SituwaitionError};
+use crate::{AsyncStdAsyncSituwaition, SituwaitionError};
 
 use super::AsyncWaiter;
 
 #[async_trait]
-impl<F, A, R, E> AsyncSituwaition for AsyncWaiter<F, A, R, E>
+impl<F, A, R, E> AsyncStdAsyncSituwaition for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,

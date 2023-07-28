@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use situwaition::{runtime::async_std::wait_for, runtime::AsyncWaiter, AsyncSituwaition};
+use situwaition::{runtime::async_std::wait_for, runtime::AsyncWaiter, AsyncStdAsyncSituwaition};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
