@@ -4,7 +4,7 @@ use std::{
     time::Duration,
 };
 
-use situwaition::{runtime::tokio::wait_for, runtime::AsyncWaiter, AsyncSituwaition};
+use situwaition::{runtime::tokio::wait_for, runtime::AsyncWaiter, TokioAsyncSituwaition};
 use thiserror::Error;
 
 #[derive(Debug, Error)]

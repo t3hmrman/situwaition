@@ -1,3 +1,4 @@
+#![cfg_attr(all(doc, CHANNEL_NIGHTLY), feature(doc_auto_cfg))]
 #![cfg(feature = "tokio")]
 
 use std::{error::Error, future::Future};
@@ -5,12 +6,12 @@ use std::{error::Error, future::Future};
 use async_trait::async_trait;
 use tokio::time::{sleep, timeout, Instant};
 
-use crate::{AsyncSituwaition, SituwaitionError};
+use crate::{TokioAsyncSituwaition, SituwaitionError};
 
 use super::AsyncWaiter;
 
 #[async_trait]
-impl<F, A, R, E> AsyncSituwaition for AsyncWaiter<F, A, R, E>
+impl<F, A, R, E> TokioAsyncSituwaition for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
     A: Fn() -> F + Send,
