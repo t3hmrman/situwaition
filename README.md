@@ -84,7 +84,7 @@ Note here that you are passing a *`Future` factory* to the function -- a functio
 
 The usual `async` usage rules apply -- use `move`, `Arc`s, `Mutex`es, and other ownership/synchronization primitives where appropriate.
 
-See a full example in [`examples/tokio/main.rs`](./examples/tokio/main.rs). To run the tokio example:
+See a full example in [`examples/tokio.rs`](./examples/tokio.rs). To run the tokio example:
 
 ```console
 cargo run --example tokio --features=tokio
@@ -114,7 +114,7 @@ use situwaition::runtime::tokio::wait_for;
 // ...
 ```
 
-See a full example in [`examples/async-std/main.rs`](./examples/async-std/main.rs). To run the async-std example:
+See a full example in [`examples/async_std.rs`](./examples/async_std.rs). To run the async-std example:
 
 ```console
 cargo run --example async-std --features=async-std
