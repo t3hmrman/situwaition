@@ -115,6 +115,7 @@ test-examples:
 # Release Management #
 ######################
 
+publish_crate := env_var_or_default("PUBLISH_CRATE", "no")
 changelog_file_path := env_var_or_default("CHANGELOG_FILE_PATH", "CHANGELOG")
 
 # Generate the changelog
@@ -128,6 +129,11 @@ release-major:
     {{just}} changelog
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
+    {{git}} tag v`just print-version`
+    {{git}} push v`just print-version`
+    if [ "{{publish_crate}}" = "yes" ]; then \
+      {{cargo}} publish; \
+    fi
 
 # Release a minor version
 release-minor:
@@ -136,6 +142,11 @@ release-minor:
     {{just}} changelog
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
+    {{git}} tag v`just print-version`
+    {{git}} push v`just print-version`
+    if [ "{{publish_crate}}" = "yes" ]; then \
+      {{cargo}} publish; \
+    fi
 
 # Release a patch version
 release-patch:
@@ -144,3 +155,8 @@ release-patch:
     {{just}} changelog
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
+    {{git}} tag v`just print-version`
+    {{git}} push v`just print-version`
+    if [ "{{publish_crate}}" = "yes" ]; then \
+      {{cargo}} publish; \
+    fi
