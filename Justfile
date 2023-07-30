@@ -130,7 +130,7 @@ release-major:
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
     {{git}} tag v`just print-version`
-    {{git}} push v`just print-version`
+    {{git}} push origin v`just print-version`
     if [ "{{publish_crate}}" = "yes" ]; then \
       {{cargo}} publish; \
     fi
@@ -143,7 +143,7 @@ release-minor:
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
     {{git}} tag v`just print-version`
-    {{git}} push v`just print-version`
+    {{git}} push origin v`just print-version`
     if [ "{{publish_crate}}" = "yes" ]; then \
       {{cargo}} publish; \
     fi
@@ -156,7 +156,7 @@ release-patch:
     {{git}} commit -am "release: v`just print-version`"
     {{git}} push
     {{git}} tag v`just print-version`
-    {{git}} push v`just print-version`
+    {{git}} push origin v`just print-version`
     if [ "{{publish_crate}}" = "yes" ]; then \
       {{cargo}} publish; \
     fi
