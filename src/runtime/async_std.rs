@@ -1,4 +1,3 @@
-#![cfg_attr(all(doc, CHANNEL_NIGHTLY), feature(doc_auto_cfg))]
 #![cfg(feature = "async-std")]
 
 use std::{error::Error, future::Future, time::Instant};
@@ -11,6 +10,7 @@ use crate::{AsyncStdAsyncSituwaition, SituwaitionError};
 use super::AsyncWaiter;
 
 #[async_trait]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std")))]
 impl<F, A, R, E> AsyncStdAsyncSituwaition for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
@@ -50,9 +50,10 @@ where
 
 /// Wait for a given function to resolve with a given result.
 ///
-/// Returning a result (as opposed to the error) will end waiting, otherwise
-/// the function will be retried up until the default timeout (see SituwaitionOpts)
+/// Returning a [Result::Ok] will end waiting, and [Result::Err]s will be ignored.
+/// The function produced by teh factory will be retried up until the default timeout (see [SituwaitionOpts][crate::SituwaitionOpts])
 #[allow(dead_code)]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std")))]
 pub async fn wait_for<R, E, F, G>(factory: F) -> Result<R, SituwaitionError<E>>
 where
     R: Send + Sync + 'static,

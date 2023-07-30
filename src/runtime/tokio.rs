@@ -1,4 +1,3 @@
-#![cfg_attr(all(doc, CHANNEL_NIGHTLY), feature(doc_auto_cfg))]
 #![cfg(feature = "tokio")]
 
 use std::{error::Error, future::Future};
@@ -11,6 +10,7 @@ use crate::{TokioAsyncSituwaition, SituwaitionError};
 use super::AsyncWaiter;
 
 #[async_trait]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 impl<F, A, R, E> TokioAsyncSituwaition for AsyncWaiter<F, A, R, E>
 where
     F: Future<Output = Result<R, E>> + Send,
@@ -53,6 +53,7 @@ where
 /// Returning a result (as opposed to the error) will end waiting, otherwise
 /// the function will be retried up until the default timeout (see SituwaitionOpts)
 #[allow(dead_code)]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 pub async fn wait_for<R, E, F, G>(factory: F) -> Result<R, SituwaitionError<E>>
 where
     R: Send + Sync + 'static,

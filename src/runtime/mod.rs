@@ -8,8 +8,11 @@ use crate::{
 };
 
 #[cfg(feature = "async-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std")))]
 pub mod async_std;
+
 #[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 pub mod tokio;
 
 #[derive(Builder)]

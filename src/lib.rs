@@ -23,6 +23,7 @@
 //! ```
 //!
 //! The example above demonstrates the synchronous usage, but `tokio` and `async-std` and corresponding modules are available as well.
+#![cfg_attr(all(doc, CHANNEL_NIGHTLY), feature(doc_cfg))]
 
 use std::{result::Result, time::Duration};
 
