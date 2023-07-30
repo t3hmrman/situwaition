@@ -31,6 +31,7 @@ use derive_builder::Builder;
 use thiserror::Error;
 
 #[cfg(any(feature = "tokio", feature = "async-std"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "async-std", feature = "tokio"))))]
 use async_trait::async_trait;
 
 pub mod runtime;
@@ -111,6 +112,7 @@ pub trait SyncSituwaition: SituwaitionBase {
 /// This trait represents a "situwaition" that can be a"waited", with tokio.
 /// note that how the waiting is done can differ by platform
 #[cfg(feature = "tokio")]
+#[cfg_attr(docsrs, doc(cfg(feature = "tokio")))]
 #[async_trait]
 pub trait TokioAsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
@@ -121,6 +123,7 @@ pub trait TokioAsyncSituwaition: SituwaitionBase {
 /// This trait represents a "situwaition" that can be a"waited", with async-std.
 /// note that how the waiting is done can differ by platform
 #[cfg(feature = "async-std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "async-std")))]
 #[async_trait]
 pub trait AsyncStdAsyncSituwaition: SituwaitionBase {
     /// Execute the situwaition, and wait until it resolves
