@@ -95,7 +95,7 @@ cargo run --example tokio --features=tokio
 If you're using [`async-std`][async-std], then your code looks like this:
 
 ```rust
-use situwaition::runtime::tokio::wait_for;
+use situwaition::runtime::async_std::wait_for;
 
 // ...
 
@@ -154,7 +154,7 @@ See the methods on [`SyncWaiter`](./src/sync.rs) and [`AsyncWaiter`](./src/runti
 
 ## Development
 
-To get started working on developing `situwatiion`, run the following [`just`][just] targets:
+To get started working on developing `situwaition`, run the following [`just`][just] targets:
 
 ```console
 just setup build
