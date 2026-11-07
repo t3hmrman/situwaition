@@ -60,12 +60,43 @@ pub enum SituwaitionError<E> {
     UnexpectedError(String),
 }
 
+/// How long a situwaition should be waited on
+///
+/// A [`Duration`] converts into [`Timeout::After`], so anywhere a `Timeout` is accepted
+/// you can pass a `Duration` (via `.into()` or, for `impl Into<Timeout>` parameters, directly).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Timeout {
+    /// Wait forever, i.e. until the check succeeds.
+    ///
+    /// Note that a check that never succeeds will make the situwaition never return.
+    Forever,
+
+    /// Give up after the given amount of time
+    After(Duration),
+}
+
+impl Timeout {
+    /// The duration to wait for, or `None` if waiting forever
+    pub fn as_duration(&self) -> Option<Duration> {
+        match self {
+            Timeout::Forever => None,
+            Timeout::After(d) => Some(*d),
+        }
+    }
+}
+
+impl From<Duration> for Timeout {
+    fn from(d: Duration) -> Self {
+        Timeout::After(d)
+    }
+}
+
 /// Options for a given situwaition
 #[allow(dead_code)]
 #[derive(Debug, Clone, Builder)]
 pub struct SituwaitionOpts {
-    /// The maximum time to wait for a situwaition
-    pub timeout: Duration,
+    /// The maximum time to wait for a situwaition (or [`Timeout::Forever`])
+    pub timeout: Timeout,
 
     /// How often to check for a passing condition.
     /// Note that in the synchronous case, this determines how quickly
@@ -80,7 +111,7 @@ pub struct SituwaitionOpts {
 impl Default for SituwaitionOpts {
     fn default() -> Self {
         SituwaitionOpts {
-            timeout: Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS),
+            timeout: Timeout::After(Duration::from_millis(DEFAULT_SITUWAITION_TIMEOUT_MS)),
             check_interval: Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS),
             check_cooldown: None,
         }
