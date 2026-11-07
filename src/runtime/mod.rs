@@ -3,7 +3,7 @@ use std::{error::Error, future::Future, time::Duration};
 use derive_builder::Builder;
 
 use crate::{
-    SituwaitionBase, SituwaitionError, SituwaitionOpts, WaiterCreationError,
+    SituwaitionBase, SituwaitionError, SituwaitionOpts, Timeout, WaiterCreationError,
     DEFAULT_SITUWAITION_CHECK_INTERVAL_MS, DEFAULT_SITUWAITION_TIMEOUT_MS,
 };
 
@@ -76,15 +76,21 @@ where
     }
 
     /// Create a SyncExecutor with only timeout customized
+    ///
+    /// Accepts anything convertible to a [`Timeout`]: a plain [`Duration`] works,
+    /// and [`Timeout::Forever`] waits without a time limit.
     #[allow(dead_code)]
     pub fn with_timeout(
         factory: A,
-        timeout: Duration,
+        timeout: impl Into<Timeout>,
     ) -> Result<AsyncWaiter<F, A, R, E>, WaiterCreationError> {
-        if timeout < Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS) {
-            return Err(WaiterCreationError::InvalidTimeout(
-                format!("supplied timeout ({}ms) is shorter the default timeout ({DEFAULT_SITUWAITION_CHECK_INTERVAL_MS}ms)", timeout.as_millis())
-            ));
+        let timeout = timeout.into();
+        if let Timeout::After(d) = timeout {
+            if d < Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS) {
+                return Err(WaiterCreationError::InvalidTimeout(
+                    format!("supplied timeout ({}ms) is shorter the default timeout ({DEFAULT_SITUWAITION_CHECK_INTERVAL_MS}ms)", d.as_millis())
+                ));
+            }
         }
         Ok(Self::with_opts(
             factory,

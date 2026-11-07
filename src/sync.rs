@@ -5,8 +5,8 @@ use std::{
 };
 
 use crate::{
-    SituwaitionBase, SituwaitionError, SituwaitionOpts, SyncSituwaition, WaiterCreationError,
-    DEFAULT_SITUWAITION_CHECK_INTERVAL_MS, DEFAULT_SITUWAITION_TIMEOUT_MS,
+    SituwaitionBase, SituwaitionError, SituwaitionOpts, SyncSituwaition, Timeout,
+    WaiterCreationError, DEFAULT_SITUWAITION_CHECK_INTERVAL_MS, DEFAULT_SITUWAITION_TIMEOUT_MS,
 };
 
 /// Synchronous situwaitioner
@@ -83,7 +83,7 @@ where
                 }
                 Err(e) => {
                     let now = Instant::now();
-                    if now - start > timeout {
+                    if matches!(timeout, Timeout::After(t) if now - start > t) {
                         let mut mutex = err_write.lock().map_err(|_| ())?;
                         *mutex = Some(SituwaitionError::TimeoutError(e));
                         break Ok::<(), ()>(());
@@ -108,7 +108,7 @@ where
                     }
 
                     // If we've timed out otherwise while doing the check, we timed out *during* a check
-                    if Instant::now() - start > self.opts.timeout {
+                    if matches!(timeout, Timeout::After(t) if Instant::now() - start > t) {
                         return Err(SituwaitionError::CheckTimeoutError);
                     }
 
@@ -148,11 +148,20 @@ where
     }
 
     /// Create a SyncWaiter with only timeout customized
-    pub fn with_timeout(check_fn: F, timeout: Duration) -> Result<Self, WaiterCreationError> {
-        if timeout < Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS) {
-            return Err(WaiterCreationError::InvalidTimeout(
-                format!("supplied timeout ({}ms) is shorter the default timeout ({DEFAULT_SITUWAITION_CHECK_INTERVAL_MS}ms)", timeout.as_millis())
-            ));
+    ///
+    /// Accepts anything convertible to a [`Timeout`]: a plain [`Duration`] works,
+    /// and [`Timeout::Forever`] waits without a time limit.
+    pub fn with_timeout(
+        check_fn: F,
+        timeout: impl Into<Timeout>,
+    ) -> Result<Self, WaiterCreationError> {
+        let timeout = timeout.into();
+        if let Timeout::After(d) = timeout {
+            if d < Duration::from_millis(DEFAULT_SITUWAITION_CHECK_INTERVAL_MS) {
+                return Err(WaiterCreationError::InvalidTimeout(
+                    format!("supplied timeout ({}ms) is shorter the default timeout ({DEFAULT_SITUWAITION_CHECK_INTERVAL_MS}ms)", d.as_millis())
+                ));
+            }
         }
         Ok(Self::with_opts(
             check_fn,
@@ -294,6 +303,60 @@ mod tests {
         assert!(
             Instant::now() - start < Duration::from_millis(250),
             "passed faster than default interval"
+        );
+    }
+
+    #[test]
+    fn test_unit_sync_executor_forever_waits_past_default_timeout() {
+        // Becomes true only after longer than the default timeout (3s),
+        // which would fail with a timeout if `Forever` were not honored.
+        let start = Instant::now();
+        let ready_at = start + Duration::from_millis(3_500);
+        assert!(
+            matches!(
+                SyncWaiter::with_timeout(
+                    move || {
+                        if Instant::now() >= ready_at {
+                            Ok(true)
+                        } else {
+                            Err(std::io::Error::new(ErrorKind::Other, "not yet"))
+                        }
+                    },
+                    Timeout::Forever
+                )
+                .expect("failed to create")
+                .exec(),
+                Ok(true)
+            ),
+            "check that becomes true after the default timeout succeeds with Timeout::Forever"
+        );
+        assert!(
+            Instant::now() - start >= Duration::from_millis(3_500),
+            "returned before the condition became true"
+        );
+    }
+
+    #[test]
+    fn test_unit_sync_executor_duration_still_times_out() {
+        // Same condition as the forever test, but a duration timeout must still fire.
+        let ready_at = Instant::now() + Duration::from_millis(3_500);
+        assert!(
+            matches!(
+                SyncWaiter::with_timeout(
+                    move || {
+                        if Instant::now() >= ready_at {
+                            Ok(true)
+                        } else {
+                            Err(std::io::Error::new(ErrorKind::Other, "not yet"))
+                        }
+                    },
+                    Timeout::After(Duration::from_millis(500))
+                )
+                .expect("failed to create")
+                .exec(),
+                Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
+            ),
+            "a duration timeout still times out"
         );
     }
 

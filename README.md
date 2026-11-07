@@ -1,6 +1,6 @@
 <h1 align="center">⏲ <code>situwaition</code></h1>
 
-`situwaition` runs a closure *continuously*, until an `Ok(..)` is received, or a timeout period elapses.
+`situwaition` runs a closure *continuously*, until an `Ok(..)` is received, or a timeout period elapses (or never, if you choose to wait forever).
 
 ## Install
 
@@ -136,6 +136,29 @@ AsyncWaiter::with_timeout(|| async { ... }, Duration::from_millis(500))?
     .exec()
     .await;
 ```
+
+### Waiting forever
+
+The timeout is a `Timeout`, which is either `Timeout::After(Duration)` or `Timeout::Forever`. A plain `Duration` converts into `Timeout::After`, so the examples above work as written. To wait with no time limit at all, pass `Timeout::Forever`:
+
+```rust
+use situwaition::Timeout;
+use situwaition::runtime::AsyncWaiter;
+use situwaition::sync::SyncWaiter;
+
+// Synchronous code
+SyncWaiter::with_timeout(|| { ... }, Timeout::Forever)?
+    .exec();
+
+// Asynchronous code (either tokio or async-std)
+AsyncWaiter::with_timeout(|| async { ... }, Timeout::Forever)?
+    .exec()
+    .await;
+```
+
+Note that a check that never succeeds will make a `Timeout::Forever` situwaition wait forever. If you build `SituwaitionOpts` yourself, its `timeout` field is a `Timeout` (use `Timeout::After(duration)` or `duration.into()`).
+
+*Upgrading from 0.3:* `SituwaitionOpts::timeout` changed from `Duration` to `Timeout`. Callers of `with_timeout` that pass a `Duration` need no changes.
 
 See the methods on [`SyncWaiter`](./src/sync.rs) and [`AsyncWaiter`](./src/runtime/mod.rs) for more options.
 

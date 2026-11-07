@@ -5,7 +5,7 @@ use std::{error::Error, future::Future, time::Instant};
 use async_std::{future::timeout, task::sleep};
 use async_trait::async_trait;
 
-use crate::{AsyncStdAsyncSituwaition, SituwaitionError};
+use crate::{AsyncStdAsyncSituwaition, SituwaitionError, Timeout};
 
 use super::AsyncWaiter;
 
@@ -25,7 +25,11 @@ where
 
         loop {
             let fut = (self.factory)();
-            match timeout(check_timeout, fut).await {
+            let outcome = match check_timeout {
+                Timeout::After(t) => timeout(t, fut).await,
+                Timeout::Forever => Ok(fut.await),
+            };
+            match outcome {
                 // Check completed in time and successfully and we can return
                 Ok(Ok(v)) => return Ok(v),
                 // Check timed out
@@ -36,7 +40,7 @@ where
                         sleep(t).await;
                     }
 
-                    if Instant::now() - start > self.opts.timeout {
+                    if matches!(check_timeout, Timeout::After(t) if Instant::now() - start > t) {
                         return Err(SituwaitionError::TimeoutError(e));
                     }
 
@@ -172,6 +176,62 @@ mod tests {
         assert!(
             Instant::now() - start < Duration::from_millis(250),
             "passed faster than default interval (250ms) w/ shorter interval"
+        );
+    }
+
+    #[async_std::test]
+    async fn test_unit_async_std_forever_waits_past_default_timeout() {
+        // Becomes true only after longer than the default timeout (3s),
+        // which would fail with a timeout if `Forever` were not honored.
+        let start = Instant::now();
+        let ready_at = start + Duration::from_millis(3_500);
+        assert!(
+            matches!(
+                AsyncWaiter::with_timeout(
+                    move || async move {
+                        if Instant::now() >= ready_at {
+                            Ok(true)
+                        } else {
+                            Err(std::io::Error::new(ErrorKind::Other, "not yet"))
+                        }
+                    },
+                    Timeout::Forever
+                )
+                .expect("failed to create")
+                .exec()
+                .await,
+                Ok(true)
+            ),
+            "check that becomes true after the default timeout succeeds with Timeout::Forever"
+        );
+        assert!(
+            Instant::now() - start >= Duration::from_millis(3_500),
+            "returned before the condition became true"
+        );
+    }
+
+    #[async_std::test]
+    async fn test_unit_async_std_duration_still_times_out() {
+        // Same condition as the forever test, but a duration timeout must still fire.
+        let ready_at = Instant::now() + Duration::from_millis(3_500);
+        assert!(
+            matches!(
+                AsyncWaiter::with_timeout(
+                    move || async move {
+                        if Instant::now() >= ready_at {
+                            Ok(true)
+                        } else {
+                            Err(std::io::Error::new(ErrorKind::Other, "not yet"))
+                        }
+                    },
+                    Timeout::After(Duration::from_millis(500))
+                )
+                .expect("failed to create")
+                .exec()
+                .await,
+                Err(SituwaitionError::TimeoutError(std::io::Error { .. })),
+            ),
+            "a duration timeout still times out"
         );
     }
 
